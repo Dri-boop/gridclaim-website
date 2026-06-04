@@ -467,11 +467,12 @@
     <div class="section-tag">// Get started</div>
     <h2>Find out in 48 hours if you're<br>overpaying on electricity.</h2>
     <p>Send us your email. We'll reach out to collect your bills<br>and deliver a free assessment within 48 hours.</p>
-    <div class="cta-form">
-      <input type="email" class="cta-input" placeholder="your@company.co.za">
-      <button class="btn-primary" onclick="alert('Thank you! We\'ll be in touch within 24 hours.')">Request Free Audit</button>
-    </div>
-    <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 1rem;">No commitment. No cost. No spam.</p>
+    <form class="cta-form" id="auditForm">
+      <input type="email" name="email" class="cta-input" placeholder="your@company.co.za" required>
+      <button type="submit" class="btn-primary">Request Free Audit</button>
+    </form>
+    <p id="formMsg" style="font-size: 0.85rem; margin-top: 1rem; min-height: 1.2em;"></p>
+    <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">No commitment. No cost. No spam.</p>
   </div>
 </section>
 
@@ -499,6 +500,41 @@
     });
   }, { threshold: 0.1 });
   document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
+
+  // ── CONTACT FORM (FormSubmit AJAX) ──
+  const auditForm = document.getElementById('auditForm');
+  const formMsg = document.getElementById('formMsg');
+  auditForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = auditForm.querySelector('button');
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    formMsg.style.color = 'var(--text-muted)';
+    formMsg.textContent = '';
+    try {
+      const endpoint = 'https://formsubmit.co/ajax/' + atob('YXB0cmFzaDEyQGdtYWlsLmNvbQ==');
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          email: auditForm.email.value,
+          _subject: 'New Free Audit request — GridClaim',
+          _captcha: 'false'
+        })
+      });
+      if (!res.ok) throw new Error('Request failed');
+      formMsg.style.color = 'var(--accent)';
+      formMsg.textContent = 'Thank you! We\'ll be in touch within 48 hours.';
+      auditForm.reset();
+    } catch (err) {
+      formMsg.style.color = '#ff6b6b';
+      formMsg.innerHTML = 'Something went wrong. Please email us directly at <a href="mailto:hello@gridclaim.co.za" style="color:inherit;">hello@gridclaim.co.za</a>.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    }
+  });
 </script>
 
 </body>
